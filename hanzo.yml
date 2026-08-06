@@ -1,0 +1,14 @@
+# Theme presets in each harness's NATIVE format — data, not code. There is
+# nothing to compile, and exactly one way this repo breaks: a preset that the
+# harness cannot load. So that is the gate. Every claude/*.json must parse and
+# carry the schema Claude Code requires — a name, a `base` of dark or light to
+# inherit unlisted keys from, and an overrides object. Malformed JSON fails at
+# jq; a missing or wrong-typed key fails the -e test.
+test:
+  - name: schema
+    run: |
+      for f in claude/*.json; do
+        jq -e '.name and (.base|test("^(dark|light)$")) and (.overrides|type=="object")' "$f" >/dev/null \
+          || { echo "invalid theme preset: $f"; exit 1; }
+        echo "ok $f"
+      done
